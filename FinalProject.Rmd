@@ -1,0 +1,105 @@
+---
+title: "Stress and Perception of Mexican-Americans"
+author: "Sandra Salas"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    fig_width: 10
+    fig_length: 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Packages
+library(tidyverse)
+
+```
+
+# Overview
+
+There were 87 subjects that completed the Multidimensional Inventory Black Identity (adapted to Mexican American identities) and a Perceived Stress Scale. Through utilizing these measurements, we anticipate that there will be a correlation between encountering stigma and its association with mental or physical health. My prediction is that participants will report less stress when their perception of the general public's regard towards them is positive.
+
+# Data Processing
+
+## Load Data
+
+```{r load}
+data<-read.csv("Data/Raw Data/STGREW1b_comb.csv")
+```
+
+## Reverse Coding
+
+```{r reverseCode}
+#Reverse scoring PSS items 2 and 3
+data <- data %>%
+  mutate_at(vars(Q2_2, Q2_3), function(x) { 6 - x })
+
+#Reverse scoring public regard items 3 and 4
+data <- data %>%
+  mutate_at(vars(Public_3, Public_4), function(x) { 8 - x })
+```
+
+## Computing variables
+
+```{r compute}
+#Compute PSS composite
+data$pss<-rowMeans(data[,c(157:160)])
+
+#Compute Public composite
+data$public<-rowMeans(data[,c(151:156)])
+
+```
+
+# Data Analysis
+
+## Descriptives
+
+### Descriptives for perceived stress
+
+```{r descPss}
+#Summary of pss variable 
+summary(data$pss)
+
+```
+
+### Descriptives for public regard
+
+```{r descPublic}
+#Summary of public variable
+summary(data$public)
+```
+
+## Correlation Analysis
+
+My prediction was supported. The more positive perception of public regard towards Mexican-Americans the less stress they report feeling.
+
+```{r corr}
+#Run correlation test for both pss and public
+pssPub<-cor.test(data$pss,data$public)
+
+#Output the result
+pssPub
+
+#Generate the graph
+corrPlot <- ggplot(data = data,
+                   aes(x = public,
+                       y = pss)) +
+  labs(x = "Perception of Public Regard of Mexican-Americans",
+       y = "Perceived Stress") +
+  theme_gray(base_size = 20) +
+  scale_x_continuous(limits=c(1,7))+
+  scale_y_continuous(limits=c(1,5))+
+  geom_point() +
+  geom_smooth(method = "lm", color = I("deeppink3")) + theme(
+    panel.background = element_rect(fill = 'azure', color = 'black'),
+    panel.grid.major = element_line(color = 'grey')
+  )
+
+
+#Output the graph
+corrPlot
+
+```
